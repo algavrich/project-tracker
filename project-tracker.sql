@@ -97,36 +97,30 @@ ALTER SEQUENCE public.projects_id_seq OWNED BY public.projects.id;
 --
 
 CREATE TABLE public.students (
-    id integer NOT NULL,
     first_name character varying(30),
     last_name character varying(30),
-    github character varying(30)
+    github character varying(30) NOT NULL
 );
 
 
 ALTER TABLE public.students OWNER TO algavrich;
 
 --
--- Name: students_id_seq; Type: SEQUENCE; Schema: public; Owner: algavrich
+-- Name: report_card_view; Type: VIEW; Schema: public; Owner: algavrich
 --
 
-CREATE SEQUENCE public.students_id_seq
-    AS integer
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
+CREATE VIEW public.report_card_view AS
+ SELECT students.first_name,
+    students.last_name,
+    grades.project_title,
+    grades.grade,
+    projects.max_grade
+   FROM ((public.students
+     JOIN public.grades ON (((students.github)::text = (grades.student_github)::text)))
+     JOIN public.projects ON (((projects.title)::text = (grades.project_title)::text)));
 
 
-ALTER TABLE public.students_id_seq OWNER TO algavrich;
-
---
--- Name: students_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: algavrich
---
-
-ALTER SEQUENCE public.students_id_seq OWNED BY public.students.id;
-
+ALTER TABLE public.report_card_view OWNER TO algavrich;
 
 --
 -- Name: grades id; Type: DEFAULT; Schema: public; Owner: algavrich
@@ -140,13 +134,6 @@ ALTER TABLE ONLY public.grades ALTER COLUMN id SET DEFAULT nextval('public.grade
 --
 
 ALTER TABLE ONLY public.projects ALTER COLUMN id SET DEFAULT nextval('public.projects_id_seq'::regclass);
-
-
---
--- Name: students id; Type: DEFAULT; Schema: public; Owner: algavrich
---
-
-ALTER TABLE ONLY public.students ALTER COLUMN id SET DEFAULT nextval('public.students_id_seq'::regclass);
 
 
 --
@@ -179,9 +166,9 @@ COPY public.projects (id, title, description, max_grade) FROM stdin;
 -- Data for Name: students; Type: TABLE DATA; Schema: public; Owner: algavrich
 --
 
-COPY public.students (id, first_name, last_name, github) FROM stdin;
-1	Jane	Hacker	jhacks
-2	Sarah	Developer	sdevelops
+COPY public.students (first_name, last_name, github) FROM stdin;
+Jane	Hacker	jhacks
+Sarah	Developer	sdevelops
 \.
 
 
@@ -197,13 +184,6 @@ SELECT pg_catalog.setval('public.grades_id_seq', 5, true);
 --
 
 SELECT pg_catalog.setval('public.projects_id_seq', 5, true);
-
-
---
--- Name: students_id_seq; Type: SEQUENCE SET; Schema: public; Owner: algavrich
---
-
-SELECT pg_catalog.setval('public.students_id_seq', 2, true);
 
 
 --
@@ -227,7 +207,7 @@ ALTER TABLE ONLY public.projects
 --
 
 ALTER TABLE ONLY public.students
-    ADD CONSTRAINT students_pkey PRIMARY KEY (id);
+    ADD CONSTRAINT students_pkey PRIMARY KEY (github);
 
 
 --
